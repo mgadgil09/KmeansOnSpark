@@ -1,0 +1,81 @@
+1) I have included my scala file under the directory:
+	src/main/scala/Kmeans.scala
+2) I have also included a simple.sbt file.
+3) To run the program, place src folder and simple.sbt inside the spark folder and the input files as well and run the following commands on terminal:
+
+	~/spark$ sbt package
+	~/spark$ bin/spark-submit   --class "Kmeans"   --master local[*]   target/scala-2.10/kmeans_2.10-1.0.jar
+4) By chance, if this doesnt work, please copy paste the entire code from Kmeans.scala onto the scala shell	./bin/spark-shell
+5) You have to manually specify the input file paths in the code. If file kept in spark folder then just need to mention the file name.ext in the code.
+
+ANSWERS
+
+1) I have run the program on my machine which has a core i7 processor. Below are the statistics for runtimes of the program 
+
+
+
+	Nips Dataset    |     K = 10    |    K = 50    |
+	1 core          |   1 min 21 s  |   3 min 12 s |
+	8 core          |   0 min 57 s  |   2 min 00 s |
+	_____________________________________________________
+	
+	nytimes Dataset |     K = 10    |    K = 50    | 
+	1 core          |    5hr +      |              |
+	8 core          |   2hr 23min   | OUT OF MEMORY|
+	_____________________________________________________
+	PubMed Dataset     COULD NOT COMPLETE. NO SPACE LEFT ON DEVICE. 
+	
+	Exception in thread "main" org.apache.spark.SparkException: Job aborted due to stage failure: Task 65 in stage 5.0 failed 1 times, most recent failure: Lost task 65.0 in stage 5.0 (TID 765, 	      localhost): java.io.IOException: No space left on device
+
+	
+	As per above readings, As K increases, runtime increases. As cores increase, runtime decreases.
+	So we can conclude that as we increase the no. of clusters, the no. of computations also increase in every iteration. Hence the runtime increases.
+	
+	
+2) 
+	After executing Kmeans from mllib, Below are the results
+	K = 10
+	
+	Nips Dataset    |     My Kmeans | MLLib Kmeans |
+	8 core          |   0 min 57 s  | 0 min 30.7 s |
+	____________________________________________________
+	
+	nytimes Dataset  |  2 hrs 23min     |  2 hrs +     |
+	
+	
+	
+3)	Once I get my tfidf vector, below is the peudocode to get initial centroids(k clusters):
+
+	for(i goes from 1 to k)
+	while(tfidf is not empty) do
+	a) canopy1 = tfidf.map{just select one vector from tfidf}
+	b) canopy1.zipwithindex // now i have my first canopy
+	c) let T1 and T2 be 2 threshold values 
+	d) for every vector in tfidf { v =>
+		compare v with canopy1._2 and get its distance. //Vectors.sqdist(v,canopy1._2)
+		if dis < T1 && if dis < T2
+		    tfidf.filter{all but v}
+		else if dis < T1
+		    v.map(v => {canopy1._1,v})  //put it in canopy 
+	        end
+	    end
+	e) Pick one point from this formed canopy as centroid.
+	   var centroids = centroids.union(canopy1.takeSample(1))
+	end
+	Thus we can get k centroids.
+	
+4)	tfidf has all the datapoints.
+	a) Our kernel function will be conversion of vectors to matrices.
+	b) select m samples from n tfidf vectors such that m<<n using takeSample
+	c) create kernel function for first n*m entries to get a marix of n*m. 
+	d)  this will be our new dataset.
+	e) Select a centroid from this set which will also be a matrix
+	f) calculate distances between every dataset entry and the centroid by the following formula:
+		(dataset - centroid)^2
+	g) based on the minimum distance assign the datapoint marix to the cluster.
+	h) this will be done till function converges.
+	i) The main difference here is, the vectors are converted to matrices in a non linear space. 
+	j) Spark API provides SparseMatrix and DenseMatrix classes for vector conversion to matrix.
+	
+	
+	
