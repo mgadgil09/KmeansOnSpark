@@ -17,7 +17,7 @@ iterations = 0
 converge = 1.0  
 while iterations < x and converge > t:  
   e-step: assign each point to a cluster, based on smallest Euclidean distance  
-  m-step: update centroids by averaging points in each cluster
+  m-step: update centroids by averaging points in each cluster  
   converge = sum( (old_centroids - new_centroids) ** 2 )  
   old_centroids = new_centroids  
   increment iterations  
